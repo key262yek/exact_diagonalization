@@ -27,6 +27,7 @@ fn test_genawaiter() -> Result<(), Error> {
             }
 
             yield_!((state, sum));
+        });
 
         for (state2, val) in hamilton_iterator{
             hamiltonian[[state2, state]] += val;
