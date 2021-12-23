@@ -2,7 +2,7 @@
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use bitvec::prelude::*;
-use exact_diagonalization::states::SimpleState;
+use exact_diagonalization::states::{SimpleState, State};
 
 fn simplestate(s : SimpleState) -> usize{
     // Collecting 100 samples in estimated 5.0003 s (47M iterations)

@@ -1,4 +1,4 @@
-use exact_diagonalization::states::{SimpleState, bit_fns::bit_flip};
+use exact_diagonalization::states::{State, SimpleState, bit_fns::bit_flip};
 use exact_diagonalization::error::Error;
 use ndarray::{Array2, arr2};
 

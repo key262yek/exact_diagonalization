@@ -1,5 +1,5 @@
 use exact_diagonalization::states::number::EigenNumber;
-use exact_diagonalization::states::{SimpleState, bit_fns::bit_flip};
+use exact_diagonalization::states::{State, SimpleState, bit_fns::bit_flip};
 use exact_diagonalization::error::Error;
 use exact_diagonalization::bases::{Basis, number::BasisN};
 use ndarray::{Array2, arr2};
@@ -43,7 +43,7 @@ fn test_number_conservation() -> Result<(), Error> {
 
                     let rep2 = bit_flip(state.rep, state.length, i, j)?;
                     let idx2 = indices.get(&rep2).unwrap();
-                    hamiltonian[[idx, idx2.1]] -= 1f64;
+                    hamiltonian[[idx2.1, idx]] -= 1f64;
                 }
             }
         }
@@ -91,9 +91,9 @@ fn test_number_conservation2() -> Result<(), Error> {
                 } else {
                     hamiltonian[[idx, idx]] += delta / 2f64;
 
-                    let rep2 = bit_flip(state.rep, state.length, i, j)?;
+                    let rep2 = bit_flip(state.rep(), state.length, i, j)?;
                     let idx2 = indices.get(&(*egn_n, rep2)).unwrap();
-                    hamiltonian[[idx, *idx2]] -= 1f64;
+                    hamiltonian[[*idx2, idx]] -= 1f64;
                 }
             }
         }
@@ -141,9 +141,9 @@ fn test_number_conservation3() -> Result<(), Error> {
             } else {
                 hamiltonian[[idx, idx]] += delta / 2f64;
 
-                let rep2 = bit_flip(state.rep, total_ptl, i, j)?;
+                let rep2 = bit_flip(state.rep(), total_ptl, i, j)?;
                 if let Some(&idx2) = indices.get(&rep2){
-                    hamiltonian[[idx, idx2]] -= 1f64;
+                    hamiltonian[[idx2, idx]] -= 1f64;
                 }
             }
         }
