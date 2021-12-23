@@ -1,7 +1,4 @@
-use crate::states::{SimpleState, number::{EigenNumber, NumberState}};
-use fnv::FnvHashMap;
-use num::integer::binomial;
-use super::BasisGenerator;
+use crate::prelude::*;
 
 pub type BasisN = BasisGenerator<EigenNumber>;
 impl BasisN{

@@ -1,6 +1,6 @@
 [package]
 name = "exact_diagonalization"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Myeongseon Choi <key262yek@gmail.com>"]
 edition = "2018"
 
@@ -8,12 +8,17 @@ edition = "2018"
 
 
 [dependencies]
-ndarray = "0.13"
-ndarray-linalg = "0.12"
-num-complex = "0.4"
+ndarray = "0.15.2"
+ndarray-linalg = "0.14.1"
+num-complex = "0.4.0"
+num-traits = "0.2.14"
 num = "0.4"
 bitvec = "0.22"
 fnv = "1.0"
+dyn-clone = "1.0"
+rand = "0.8.3"
+genawaiter = "0.99.1"
+
 
 [dev-dependencies]
 criterion = "0.3.4"

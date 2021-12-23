@@ -1,5 +1,4 @@
-use crate::states::bit_fns::cyclic_move_unsafe;
-use crate::error::{Error, ErrorCode};
+use crate::prelude::*;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd)]
 pub struct BitIterator {

@@ -1,11 +1,8 @@
-use crate::states::iterator::{BitIterator, PairIterator, PeriodicPairIterator, PeriodicPairEnumerator, PeriodicDistancedPairIterator, PeriodicDistancedPairEnumerator, CycleIterator};
-use ndarray::Array1;
-use num_complex::Complex;
+use crate::prelude::*;
+
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
-use crate::error::{Error, ErrorCode};
 
-use self::number::EigenNumber;
 
 pub mod bit_fns;
 pub mod iterator;
@@ -116,7 +113,7 @@ impl State for SimpleState{
 #[derive(Clone, Debug)]
 pub struct GeneralState{
     pub states : Vec<SimpleState>,
-    pub coeffs : Array1<Complex<f64>>,
+    pub coeffs : Array1<Complex64>,
 }
 
 // =====================================================================================================

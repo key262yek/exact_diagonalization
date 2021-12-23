@@ -1,8 +1,6 @@
-use exact_diagonalization::hamiltonian::PeriodicNearestXXZ;
+use exact_diagonalization::states::bit_fns::bit_flip_unsafe;
 use genawaiter::{sync::gen, yield_};
-use exact_diagonalization::states::{State, SimpleState, bit_fns::bit_flip_unsafe};
-use exact_diagonalization::error::Error;
-use ndarray::{Array2, arr2};
+use exact_diagonalization::prelude::*;
 
 
 #[test]

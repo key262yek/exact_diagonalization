@@ -1,7 +1,6 @@
-use crate::states::bit_fns::bit_flip_unsafe;
 #[allow(unused_imports)]
 use genawaiter::{sync::gen, sync_producer, yield_};
-use crate::states::State;
+use crate::prelude::*;
 
 pub struct PeriodicNearestXXZ{
     pub delta : f64

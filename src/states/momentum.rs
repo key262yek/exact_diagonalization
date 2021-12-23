@@ -1,9 +1,7 @@
-use num_complex::Complex64;
-use crate::states::{State, EigenState, EigenValue, GeneralState, RepWith, SimpleState, Representation, number::EigenNumber};
-use ndarray::Array1;
-use std::f64::consts::PI;
 
-use super::bit_fns::period_unsafe;
+use crate::states::GeneralState;
+use crate::prelude::*;
+
 
 impl SimpleState{
     pub fn period(&self) -> usize{

@@ -1,6 +1,6 @@
-use super::{State, GeneralState, EigenState, SimpleState, EigenValue, Representation, RepWith, AddInfo, momentum::EigenNumMomentum};
-use ndarray::arr1;
-use num_complex::Complex64;
+use crate::prelude::*;
+use super::{GeneralState, AddInfo};
+
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct EigenNumber(usize);

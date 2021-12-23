@@ -1,6 +1,4 @@
-use crate::bases::BasisGenerator;
-use crate::states::{SimpleState, momentum::{EigenNumMomentum, NumMomentumState}};
-use fnv::FnvHashMap;
+use crate::prelude::*;
 
 pub type BasisNK = BasisGenerator<EigenNumMomentum>;
 

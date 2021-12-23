@@ -1,5 +1,4 @@
 // Moduel for defining errors
-
 use std::fmt::{self, Display, Formatter};
 use std::io;
 

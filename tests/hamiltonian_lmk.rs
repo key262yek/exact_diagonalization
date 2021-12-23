@@ -1,11 +1,8 @@
 use num_traits::identities::Zero;
-use num_complex::Complex64;
-use ndarray::{Array2, arr2};
 use ndarray_linalg::assert::close_l2;
 use exact_diagonalization::{
-    states::{State, bit_fns::bit_flip_unsafe, momentum::EigenNumMomentum},
-    bases::momentum::BasisNK,
-    error::Error};
+    states::bit_fns::bit_flip_unsafe,
+    prelude::*};
 
 fn hamiltonian_with(l : usize, m : usize, k : usize) -> Result<Array2<Complex64>, Error>{
     let basis_gen = BasisNK::new(EigenNumMomentum::new(m, k), l);

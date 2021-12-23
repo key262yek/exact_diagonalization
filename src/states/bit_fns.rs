@@ -1,5 +1,4 @@
-use crate::states::SimpleState;
-use crate::error::{Error, ErrorCode};
+use crate::prelude::*;
 
 impl SimpleState{
     pub fn bit_flip(&self, i : usize, j : usize) -> Result<Self, Error>{
