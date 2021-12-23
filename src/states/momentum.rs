@@ -85,7 +85,7 @@ impl NumMomentumState{
         let mut coeff : Complex64 = Complex64::from( (period as f64).sqrt() / (length as f64));
         let mut result = NumMomentumState{
             state : GeneralState{
-                states : vec![temp],
+                states : vec![],
                 coeffs : Array1::<Complex64>::zeros([period]),
             },
             index : RepWith::<EigenNumMomentum>::new(eigen_v, rep),
@@ -153,6 +153,8 @@ impl NumMomentumState{
 
 #[cfg(test)]
 mod test {
+    use ndarray_linalg::{aclose};
+
     use super::*;
     #[test]
     fn test_period(){
@@ -269,5 +271,27 @@ mod test {
         sum_commensurability(10, 2);
         sum_commensurability(10, 5);
         sum_commensurability(10, 1);
+    }
+
+    #[test]
+    fn test_state() -> Result<(), Error>{
+        let nkstate = NumMomentumState::new(SimpleState::new(5, 4), 0).unwrap();
+        assert_eq!(nkstate.state.states[0], SimpleState::new(5, 4));
+        assert_eq!(nkstate.state.states[1], SimpleState::new(10, 4));
+
+        let c = Complex64::from(1f64 / 8f64.sqrt());
+        aclose(nkstate.state.coeffs[[0]], c, 1e-10);
+        aclose(nkstate.state.coeffs[[1]], c, 1e-10);
+
+        assert_eq!(nkstate.index.eigenvalue().total_number(), 2);
+        assert_eq!(nkstate.index.eigenvalue().wave_number(), 0);
+        assert_eq!(nkstate.length, 4);
+
+        let nkstate = NumMomentumState::new(SimpleState::new(10, 4), 0);
+        assert_eq!(nkstate, None);
+
+        let nkstate = NumMomentumState::new(SimpleState::new(5, 4), 1);
+        assert_eq!(nkstate, None);
+        Ok(())
     }
 }

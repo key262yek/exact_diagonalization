@@ -212,12 +212,12 @@ impl<T> EigenState<T>
         self.index.eigenvalue()
     }
 
-    pub fn rep(&self) -> usize{
-        self.index.rep()
+    pub fn states(&self) -> &Vec<SimpleState>{
+        &self.state.states
     }
 
-    pub fn length(&self) -> usize{
-        self.length
+    pub fn coeffs(&self) -> &Array1<Complex64>{
+        &self.state.coeffs
     }
 }
 

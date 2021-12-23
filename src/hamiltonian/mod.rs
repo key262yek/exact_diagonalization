@@ -2,6 +2,7 @@
 use genawaiter::{sync::gen, sync_producer, yield_};
 use crate::prelude::*;
 
+
 pub struct PeriodicNearestXXZ{
     pub delta : f64
 }
@@ -13,7 +14,7 @@ impl PeriodicNearestXXZ{
         }
     }
 
-    pub fn apply_to<S>(&self, state : S) -> impl Iterator<Item = (usize, f64)> + '_
+    pub fn apply_to<'a, S>(&'a self, state : &'a S) -> impl Iterator<Item = (usize, f64)> + 'a
         where S : State + 'static{
         gen!({
             let num = state.rep();
@@ -48,7 +49,7 @@ impl PeriodicNextNearestXXZ{
         self.delta
     }
 
-    pub fn apply_to<S>(&self, state : S) -> impl Iterator<Item = (usize, f64)> + '_
+    pub fn apply_to<'a, S>(&'a self, state : &'a S) -> impl Iterator<Item = (usize, f64)> + 'a
         where S : State + 'static{
         gen!({
             let num = state.rep();
@@ -88,7 +89,7 @@ mod test {
 
         let delta = 2f64;
         let x: PeriodicNearestXXZ  = PeriodicNearestXXZ::new(delta);
-        for data in x.apply_to(SimpleState::new(2, 4)){
+        for data in x.apply_to(&SimpleState::new(2, 4)){
             assert!((data == (1, -1f64)) || (data == (4, -1f64)) || (data == (2, 0f64)));
         }
     }

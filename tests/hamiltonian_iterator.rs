@@ -27,7 +27,6 @@ fn test_genawaiter() -> Result<(), Error> {
             }
 
             yield_!((state, sum));
-        });
 
         for (state2, val) in hamilton_iterator{
             hamiltonian[[state2, state]] += val;
@@ -66,7 +65,7 @@ fn test_genawaiter2() -> Result<(), Error> {
     for idx in 0..max_state {
         let state = SimpleState::new(idx, total_ptl);
 
-        for (idx2, val) in xxz.apply_to(state){
+        for (idx2, val) in xxz.apply_to(&state){
             hamiltonian[[idx2, idx]] += val;
         }
     }
