@@ -41,6 +41,10 @@ pub fn bit_flip(num: usize, length: usize, i: usize, j: usize) -> Result<usize, 
     return Ok(num ^ ((1 << i) + (1 << j)));
 }
 
+pub fn bit_flip_unsafe(num: usize, i: usize, j: usize) -> usize{
+    return num ^ ((1 << i) + (1 << j));
+}
+
 pub fn pick_bit(num: usize, length: usize, idx: usize) -> Result<usize, Error> {
     if length <= idx {
         return Err(Error::make_error_syntax(ErrorCode::InvalidBitIndex));
@@ -86,6 +90,19 @@ pub fn period(num: usize, length: usize) -> Result<usize, Error> {
         count += 1;
         if temp == num {
             return Ok(count);
+        }
+    }
+}
+
+pub fn period_unsafe(num : usize, length : usize) -> usize{
+    let mut temp = num;
+    let mut count = 0;
+
+    loop {
+        temp = cyclic_move_unsafe(temp, length);
+        count += 1;
+        if temp == num {
+            return count;
         }
     }
 }
