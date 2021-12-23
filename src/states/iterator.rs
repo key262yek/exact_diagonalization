@@ -1,5 +1,4 @@
 use crate::states::bit_fns::cyclic_move_unsafe;
-use crate::states::SimpleState;
 use crate::error::{Error, ErrorCode};
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd)]
@@ -160,6 +159,89 @@ impl Iterator for PeriodicPairEnumerator {
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd)]
+pub struct PeriodicDistancedPairIterator{
+    num1 : usize,
+    num2 : usize,
+    idx : usize,
+    length : usize,
+    dist : usize
+}
+
+impl PeriodicDistancedPairIterator{
+    pub fn new(num : usize, length : usize, dist : usize) -> Result<Self, Error>{
+        if num >= (1 << length) || dist >= length {
+            return Err(Error::make_error_syntax(ErrorCode::OverFlow));
+        } else {
+            Ok(Self{
+                num1 : num,
+                num2 : ((num >> dist) + ((num % (1 << dist)) << (length - dist))),
+                idx : 0,
+                length,
+                dist,
+            })
+        }
+    }
+}
+
+impl Iterator for PeriodicDistancedPairIterator{
+    type Item = (usize, usize);
+
+    fn next(&mut self) -> Option<Self::Item>{
+        if self.idx == self.length{
+            return None;
+        } else {
+            let result = (self.num1 % 2, self.num2 % 2);
+            self.num1 = self.num1 >> 1;
+            self.num2 = self.num2 >> 1;
+            self.idx += 1;
+            return Some(result);
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd)]
+pub struct PeriodicDistancedPairEnumerator{
+    num1 : usize,
+    num2 : usize,
+    idx : usize,
+    length : usize,
+    dist : usize
+}
+
+impl PeriodicDistancedPairEnumerator{
+    pub fn new(num : usize, length : usize, dist : usize) -> Result<Self, Error>{
+        if num >= (1 << length) || dist >= length {
+            return Err(Error::make_error_syntax(ErrorCode::OverFlow));
+        } else {
+            Ok(Self{
+                num1 : num,
+                num2 : ((num >> dist) + ((num % (1 << dist)) << (length - dist))),
+                idx : 0,
+                length,
+                dist,
+            })
+        }
+    }
+}
+
+impl Iterator for PeriodicDistancedPairEnumerator{
+    type Item = ((usize, usize), (usize, usize));
+
+    fn next(&mut self) -> Option<Self::Item>{
+        if self.idx == self.length{
+            return None;
+        } else {
+            let result = ((self.idx, self.num1 % 2), ((self.idx + self.dist) % self.length, self.num2 % 2));
+            self.num1 = self.num1 >> 1;
+            self.num2 = self.num2 >> 1;
+            self.idx += 1;
+            return Some(result);
+        }
+    }
+}
+
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd)]
 pub struct CycleIterator{
     start : usize,
     num : usize,
@@ -237,6 +319,7 @@ impl Iterator for CommenIterator{
 
 #[cfg(test)]
 mod test {
+    use crate::states::{SimpleState, State};
     use super::*;
 
     #[test]

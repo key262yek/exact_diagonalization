@@ -1,7 +1,9 @@
 use num_complex::Complex64;
-use crate::states::{SimpleState, EigenState, EigenValue, GeneralState, number::EigenNumber};
+use crate::states::{State, EigenState, EigenValue, GeneralState, RepWith, SimpleState, Representation, number::EigenNumber};
 use ndarray::Array1;
 use std::f64::consts::PI;
+
+use super::bit_fns::period_unsafe;
 
 impl SimpleState{
     pub fn period(&self) -> usize{
@@ -82,15 +84,14 @@ impl NumMomentumState{
         }
 
         let omega : Complex64 = eigen_v.phase_factor(length).inv();
-        let mut coeff : Complex64 = Complex64::new( (period as f64).sqrt() / (length as f64) , 0.0);
+        let mut coeff : Complex64 = Complex64::from( (period as f64).sqrt() / (length as f64));
         let mut result = NumMomentumState{
             state : GeneralState{
                 states : vec![temp],
                 coeffs : Array1::<Complex64>::zeros([period]),
             },
-            rep,
+            index : RepWith::<EigenNumMomentum>::new(eigen_v, rep),
             length,
-            value : Box::new(eigen_v),
         };
 
         for i in 0..period{
@@ -111,15 +112,14 @@ impl NumMomentumState{
         let egn_nk = EigenNumMomentum(m, k);
 
         let omega = egn_nk.phase_factor(s.length).inv();
-        let mut coeff = Complex64::new((p as f64).sqrt() / (s.length as f64), 0.0);
+        let mut coeff = Complex64::from((p as f64).sqrt() / (s.length as f64));
         let mut result = NumMomentumState{
             state : GeneralState{
                 states : vec![],
                 coeffs : Array1::<Complex64>::zeros([p]),
             },
-            rep : s.rep,
+            index : RepWith::<EigenNumMomentum>::new(egn_nk, s.rep),
             length : s.length,
-            value : Box::new(egn_nk),
         };
 
         let mut temp = s.clone();
@@ -132,6 +132,23 @@ impl NumMomentumState{
         }
 
         return result;
+    }
+
+    pub fn total_number(&self) -> usize{
+        self.index.eigenvalue().0
+    }
+
+    pub fn wave_number(&self) -> usize{
+        self.index.eigenvalue().1
+    }
+
+    pub fn phase_factor(&self) -> Complex64{
+        Complex64::new(0f64, 2f64 * PI * (self.wave_number() as f64) / (self.length as f64)).exp()
+    }
+
+    pub fn normalize_factor(&self) -> Complex64{
+        let p = period_unsafe(self.rep(), self.length);
+        Complex64::from((p as f64).sqrt() / (self.length as f64))
     }
 }
 
@@ -234,9 +251,9 @@ mod test {
         fn sum_commensurability(length : usize, period : usize){
             for k in 0..length{
                 let omega : Complex64 = Complex64::new(0f64, -2f64 * PI * (k as f64) / ((length / period) as f64)).exp();
-                let mut coeff : Complex64 = Complex64::new( 1.0 , 0.0);
-                let mut sum : Complex64 = Complex64::new(0.0, 0.0);
-                let test : Complex64 = Complex64::new((length / period) as f64, 0.0);
+                let mut coeff : Complex64 = Complex64::from( 1.0);
+                let mut sum : Complex64 = Complex64::from(0.0);
+                let test : Complex64 = Complex64::from((length / period) as f64);
 
                 for _ in 0..(length / period){
                     sum += coeff;

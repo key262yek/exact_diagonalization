@@ -1,5 +1,4 @@
-use crate::states::AddInfo;
-use super::{GeneralState, EigenState, SimpleState, EigenValue, momentum::EigenNumMomentum};
+use super::{State, GeneralState, EigenState, SimpleState, EigenValue, Representation, RepWith, AddInfo, momentum::EigenNumMomentum};
 use ndarray::arr1;
 use num_complex::Complex64;
 
@@ -32,9 +31,8 @@ impl NumberState{
                 states : vec![s],
                 coeffs : arr1(&[Complex64::new(1.0, 0.0)]),
             },
-            rep : s.rep,
+            index : RepWith::<EigenNumber>::new(EigenNumber(m), s.rep),
             length : s.length,
-            value : Box::new(EigenNumber(m)),
         }
     }
 
@@ -43,12 +41,8 @@ impl NumberState{
         NumberState::new(s)
     }
 
-    pub fn value(&self) -> EigenNumber{
-        *self.value
-    }
-
     pub fn total_number(&self) -> usize{
-        self.value.total_number()
+        self.index.eigenvalue().0
     }
 }
 
