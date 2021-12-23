@@ -73,7 +73,7 @@ impl Basis {
                     None => {
                         for (i, state) in nkstate.state.states.iter().enumerate(){
                             let num = state.rep;
-                            indices.insert((egn_nk, num), (0, (period - i) % period));
+                            indices.insert((egn_nk, num), (0, i));
                         }
 
                         let mut basis_nk : Vec<NumMomentumState> = Vec::new();
@@ -86,7 +86,7 @@ impl Basis {
 
                         for (i, state) in nkstate.state.states.iter().enumerate(){
                             let num = state.rep;
-                            indices.insert((egn_nk, num), (idx, (period - i) % period));
+                            indices.insert((egn_nk, num), (idx, i));
                         }
                         basis_nk.push(nkstate);
                     }

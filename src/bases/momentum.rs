@@ -25,7 +25,6 @@ impl BasisNK{
         for n in 0..max_state{
             let state = SimpleState::new(n, self.length);
             let m = state.total_number();
-            let p = state.period();
 
             if m != self.value.total_number() {
                 continue;
@@ -34,7 +33,7 @@ impl BasisNK{
             if let Some(nkstate) = NumMomentumState::new(state, self.value.wave_number()){
                 for (i, state) in nkstate.state.states.iter().enumerate(){
                     let num = state.rep;
-                    indices.insert(num, (idx, (p - i) % p));
+                    indices.insert(num, (idx, i));
                 }
 
                 basis.push(nkstate);
