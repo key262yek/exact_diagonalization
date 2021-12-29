@@ -8,15 +8,27 @@ edition = "2018"
 
 
 [dependencies]
-ndarray = "0.14"
-ndarray-linalg = {version = "0.13.1", features = ["openblas-system"]}
-openblas-src = {version = "0.10.4", features = ["cache"]}
-num-complex = "0.3.1"
-num-traits = "0.2.11"
-rand = "0.7.3"
-rand_pcg = "0.2"
-rand_core = "0.5.1"
+# ndarray = "0.14"
+# ndarray-linalg = {version = "0.13.1", features = ["openblas-system"]}
+# openblas-src = {version = "0.10.4", features = ["cache"]}
+# num-complex = "0.3.1"
+# num-traits = "0.2.11"
+# rand = "0.7.3"
+# rand_pcg = "0.2"
+# rand_core = "0.5.1"
+# rand_distr= "0.3.0"
+
+ndarray = "0.15.2"
+ndarray-linalg = {version = "0.14.1", features = ["openblas-system"]}
+blas-src = {version = "0.8", features = ["openblas"] }
+openblas-src = {version = "0.10.4", features = ["cblas", "system"]}
+num-complex = "0.4.0"
+num-traits = "0.2.14"
+rand = "0.8.3"
+rand_pcg = "0.3"
+rand_core = "0.6.0"
 rand_distr= "0.3.0"
+
 num = "0.4"
 bitvec = "0.22"
 fnv = "1.0"
@@ -24,22 +36,7 @@ dyn-clone = "1.0"
 genawaiter = "0.99.1"
 
 
-# ndarray = "0.14"
-# ndarray-linalg = {version = "0.13.1", features = ["openblas-static"]}
-# openblas-src = {version = "0.10.4", features = ["cache"]}
-# num-complex = "0.3.1"
 
-# ndarray = "0.15.2"
-# ndarray-linalg = {version = "0.14.1", features = ["openblas-static"]}
-# openblas-src = {version = "0.10.4", features = ["static"]}
-# num-complex = "0.4.0"
-# num-traits = "0.2.14"
-# rand = "0.8.3"
-
-# ndarray-linalg = {version = "0.14.1", features = ["intel-mkl-system"]}
-# intel-mkl-src = {version = "0.6.0+mkl2020.1"}
-# intel-mkl-sys = "0.2.0+mkl2020.1"
-# intel-mkl-tool = "0.2.0+mkl2020.1"
 
 [dev-dependencies]
 criterion = "0.3.4"

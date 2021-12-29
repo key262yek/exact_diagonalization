@@ -1,15 +1,11 @@
 use fnv::FnvHashMap;
+use ndarray_linalg::close_l2;
 use ndarray_linalg::{Eigh, UPLO, generate::conjugate};
 use exact_diagonalization::prelude::*;
-use std::env;
-use std::io::prelude::*;
-use std::fs::File;
-use std::io::BufWriter;
-use std::path::Path;
 use rand_pcg::Pcg64;
 use rand::distributions::Uniform;
 use rand::Rng;
-use std::time::Instant;
+
 
 
 
@@ -57,26 +53,19 @@ fn diag_ising(basis : &Vec<EigenState<EigenNumMomentum>>, delta : f64)
     return Ok(hamiltonian);
 }
 
-fn main() -> (){
-    let args: Vec<String> = env::args().collect();
-    println!("{:?}", env::current_dir());
-    println!("{:?}", args);
-
-    let l = args[1].parse::<usize>().unwrap();
-    let m = args[2].parse::<usize>().unwrap();
-    let k = args[3].parse::<usize>().unwrap();
-    let delta  = args[4].parse::<f64>().unwrap();
-    let lambda = args[5].parse::<f64>().unwrap();
-    let num_en     = args[6].parse::<usize>().unwrap();
-    let filepath = Path::new(&args[7]);
-
+#[test]
+fn test_quench_positive_work() -> (){
+    let l = 10;
+    let m = 4;
+    let k = 0;
+    let delta  = 2f64;
+    let lambda = 1f64;
+    let num_en = 10000;
+    let rtol = 1e-3;
     let p : f64 = 1f64 / (num_en as f64);
 
     let basis_gen = BasisNK::new(EigenNumMomentum::new(m, k), l);
     let (basis, indices) = basis_gen.build().unwrap();
-
-    let output = File::create(filepath).unwrap();
-    let mut writer = BufWriter::new(&output);
 
     let h0 = hamiltonian_with(&basis, &indices, delta).unwrap();
     let (eval0, evec0) = &h0.eigh(UPLO::Lower).unwrap();
@@ -90,21 +79,11 @@ fn main() -> (){
 
     let mut result : Array1<f64> = Array1::zeros(basis.len());
     for _ in 0..num_en{
-        let start = Instant::now();
 
         let r = rng.sample(uni);
         let h2 = (&h1 * r) + &h0;
 
         let (eval2, evec2) = &h2.eigh(UPLO::Lower).unwrap();
-        // let conj_evec2 : Array2<Complex64> = conjugate(evec2);
-
-        // let unitary1 = Array2::from_diag(&eval2.map(|&x| Complex64::new(0.0, x).exp()));
-        // let unitary2 = Array2::from_diag(&eval2.map(|&x| Complex64::new(0.0, -x).exp()));
-
-        // let x1 = conj_evec0.dot(evec2);
-        // let x2 = conj_evec2.dot(evec0);
-
-        // let change = (x1.dot(&unitary2).dot(&x2).dot(&energy_diag).dot(&x1).dot(&unitary1).dot(&x2) - &energy_diag).into_diag();
 
         let unitary1 = Array2::from_diag(&eval2.map(|&x| Complex64::new(0.0, x).exp()));
         let x1 = conj_evec0.dot(evec2);
@@ -115,20 +94,8 @@ fn main() -> (){
         let change = (left.dot(&energy_diag).dot(&right) - &energy_diag).into_diag();
 
         result = result + change.map(|x| if x.re > 0.000001 {p} else {0.0});
-
-        // println!("{:?}", &h2);
-        // println!("{:?}", &eval2);
-        // println!("{:?}", &evec2);
-        // println!("{:?}", &unitary1);
-        // println!("{:?}", &x1);
-        // println!("{:?}", &x2);
-        // println!("{:?}", &right);
-        // println!("{:?}", &left);
-        // println!("{:?}", &change);
-        println!("{:?}", start.elapsed());
     }
 
-    for (v, pv) in eval0.iter().zip(result.iter()){
-        write!(&mut writer,"{:.05e}\t{:.05e}\n", v, pv).unwrap();
-    }
+    let truth_res : Array1<f64> = arr1(&[0.9985, 0.9983, 0.9976, 0.9939, 0.6061, 0.9945, 0.0, 0.9972, 0.9972, 0.8416, 0.0, 0.34, 0.0, 0.9983, 0.0, 0.0, 0.0, 0.441, 0.0, 0.9987, 0.0, 0.0]);
+    close_l2(&result, &truth_res, rtol);
 }
