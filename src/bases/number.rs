@@ -9,9 +9,13 @@ impl BasisN{
         }
     }
 
-    pub fn build(&self) -> (Vec<NumberState>, FnvHashMap<usize, usize>){
+    pub fn build(&self) -> Result<(Vec<NumberState>, FnvHashMap<usize, usize>), Error>{
         let num = self.value.total_number();
         let length = self.length;
+
+        if num > length {
+            return Err(Error::make_error_syntax(ErrorCode::OverFlow));
+        }
 
         let max_state = 1 << length;
         let mut basis : Vec<NumberState> = Vec::with_capacity(binomial(length, num));
@@ -28,7 +32,7 @@ impl BasisN{
             }
         }
 
-        return (basis, indices);
+        return Ok((basis, indices));
     }
 }
 
@@ -43,7 +47,7 @@ mod test {
         let rep = 0;
 
         let gen = BasisN::new(EigenNumber::new(rep), length);
-        let (base, mut indices) = gen.build();
+        let (base, mut indices) = gen.build().unwrap();
         assert_eq!(base, vec![NumberState::new(SimpleState{rep : 0, length})]);
         for (k, v) in indices.drain(){
             assert!(k == 0 && v == 0);
@@ -51,7 +55,7 @@ mod test {
 
         let rep = 2;
         let gen = BasisN::new(EigenNumber::new(rep), length);
-        let (base, mut indices) = gen.build();
+        let (base, mut indices) = gen.build().unwrap();
         assert_eq!(base,
             vec![NumberState::new(SimpleState{rep : 3, length}),
                  NumberState::new(SimpleState{rep : 5, length}),

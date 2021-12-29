@@ -14,7 +14,7 @@ impl BasisNK{
         self.value.check_commensurability(period, self.length)
     }
 
-    pub fn build(&self) -> (Vec<NumMomentumState>, FnvHashMap<usize, (usize, usize)>){
+    pub fn build(&self) -> Result<(Vec<NumMomentumState>, FnvHashMap<usize, (usize, usize)>), Error>{
         let max_state = 1 << self.length;
         let mut basis : Vec<NumMomentumState> = Vec::new();
         let mut indices : FnvHashMap<usize, (usize, usize)> = FnvHashMap::default();
@@ -39,7 +39,10 @@ impl BasisNK{
             }
         }
 
-        return (basis, indices);
+        if basis.len() == 0{
+            return Err(Error::make_error_syntax(ErrorCode::InvalidConfiguration));
+        }
+        return Ok((basis, indices));
     }
 }
 

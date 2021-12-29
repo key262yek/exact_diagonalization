@@ -41,6 +41,7 @@ impl Error{
             ErrorCode::Io(_) => Category::Io,
             ErrorCode::InvalidBitIndex
             | ErrorCode::OverFlow
+            | ErrorCode::InvalidConfiguration
              => Category::Syntax,
         }
     }
@@ -83,11 +84,14 @@ pub enum ErrorCode{
     /// Some IO error occurred while serializing or deserializing.
     Io(io::Error),
 
-    // Invalid Bit index.
+    // Index is negative, or is larger than length of number
     InvalidBitIndex,
 
-    // Over Flow
+    // OverFlow
     OverFlow,
+
+    // Invalid configuration, there could not be such system
+    InvalidConfiguration,
 }
 
 impl Display for ErrorCode{
@@ -97,6 +101,7 @@ impl Display for ErrorCode{
             ErrorCode::Io(ref err) => Display::fmt(err, f),
             ErrorCode::InvalidBitIndex => f.write_str("Invalid Bit index."),
             ErrorCode::OverFlow => f.write_str("State representation over flows."),
+            ErrorCode::InvalidConfiguration => f.write_str("There could not be such system"),
         }
     }
 }
