@@ -6,7 +6,7 @@ use exact_diagonalization::{
 
 fn hamiltonian_with(l : usize, m : usize, k : usize) -> Result<Array2<Complex64>, Error>{
     let basis_gen = BasisNK::new(EigenNumMomentum::new(m, k), l);
-    let (basis, indices) = basis_gen.build();
+    let (basis, indices) = basis_gen.build().unwrap();
 
     let delta = Complex64::from(2f64);
     let omega_k = basis[0].phase_factor();

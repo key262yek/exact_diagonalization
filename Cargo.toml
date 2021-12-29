@@ -9,17 +9,25 @@ edition = "2018"
 
 [dependencies]
 ndarray = "0.14"
-ndarray-linalg = {version = "0.13.1", features = ["openblas-static"]}
+ndarray-linalg = {version = "0.13.1", features = ["openblas-system"]}
 openblas-src = {version = "0.10.4", features = ["cache"]}
 num-complex = "0.3.1"
 num-traits = "0.2.11"
 rand = "0.7.3"
+rand_pcg = "0.2"
+rand_core = "0.5.1"
+rand_distr= "0.3.0"
 num = "0.4"
 bitvec = "0.22"
 fnv = "1.0"
 dyn-clone = "1.0"
 genawaiter = "0.99.1"
 
+
+# ndarray = "0.14"
+# ndarray-linalg = {version = "0.13.1", features = ["openblas-static"]}
+# openblas-src = {version = "0.10.4", features = ["cache"]}
+# num-complex = "0.3.1"
 
 # ndarray = "0.15.2"
 # ndarray-linalg = {version = "0.14.1", features = ["openblas-static"]}

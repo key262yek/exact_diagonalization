@@ -61,7 +61,7 @@ fn test_genawaiter2() -> Result<(), Error> {
     let mut hamiltonian = Array2::<f64>::zeros((max_state, max_state));
     let delta = 2f64;
     let t = 2f64 * delta;
-    let xxz = PeriodicNearestXXZ::new(delta);
+    let xxz = PeriodicNearestXXZ::new(1f64, delta);
 
     for idx in 0..max_state {
         let state = SimpleState::new(idx, total_ptl);

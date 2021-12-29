@@ -121,7 +121,7 @@ fn test_number_conservation3() -> Result<(), Error> {
     let m = 2;
     let basis = BasisN::new(EigenNumber::new(m), total_ptl);
 
-    let (magnet_set, indices) = basis.build();
+    let (magnet_set, indices) = basis.build().unwrap();
 
     let delta = 2f64;
     let t = 2f64 * delta;

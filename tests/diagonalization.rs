@@ -1,13 +1,12 @@
-use num::One;
 use ndarray_linalg::{Eigh, UPLO, assert::close_l2};
 use exact_diagonalization::prelude::*;
 
-fn hamiltonian_with(l : usize, m : usize, k : usize) -> Result<(Array1<f64>, Array2<Complex64>), Error>{
+fn nearest_hamiltonian_with(l : usize, m : usize, k : usize) -> Result<(Array1<f64>, Array2<Complex64>), Error>{
     let basis_gen = BasisNK::new(EigenNumMomentum::new(m, k), l);
-    let (basis, indices) = basis_gen.build();
+    let (basis, indices) = basis_gen.build().unwrap();
 
     let delta = 2f64;
-    let xxz = PeriodicNearestXXZ::new(delta);
+    let xxz = PeriodicNearestXXZ::new(1f64, delta);
     let omega_k = basis[0].phase_factor();
 
     let n = basis.len();
@@ -26,19 +25,22 @@ fn hamiltonian_with(l : usize, m : usize, k : usize) -> Result<(Array1<f64>, Arr
     return hamiltonian.eigh(UPLO::Lower).map_err(|c| Error::make_error_msg(format_args!("{}", c).to_string()));
 }
 
+
 #[test]
 fn test_diagonalization() -> Result<(), Error>{
-    let t = Complex64::from(3f64.sqrt());
-    let s = Complex64::from(6f64.sqrt());
-    let o = Complex64::one();
+    let t = Complex64::from(2f64.sqrt());
+    let s = Complex64::from(3f64.sqrt());
+    let cn = 2f64 * (6f64 - 2f64 * s).sqrt();
+    let cp = 2f64 * (6f64 + 2f64 * s).sqrt();
 
     let length = 4;
     let m = 2;
 
-    let (test_values, test_vectors) = hamiltonian_with(length, m, 0)?;
+
+    let (test_values, test_vectors) = nearest_hamiltonian_with(length, m, 0)?;
     let truth_values = arr1(&[2f64 - 12f64.sqrt(), 2f64 + 12f64.sqrt()]);
-    let truth_vectors = arr2(&[[(t - o) / (2f64 * s), (2f64 * t).inv()],
-                                                            [(- t - o) / (2f64 * s), (2f64 * t).inv()]]);
+    let truth_vectors = arr2(&[[((-2f64 * t) / cn), ((-2f64 * t) / cp)],
+                                                            [(2f64 * (1f64 - s) / cn), (2f64 * (1f64 + s) / cp)]]);
     close_l2(&test_values, &truth_values, 1e-10);
     close_l2(&test_vectors, &truth_vectors, 1e-10);
     Ok(())
