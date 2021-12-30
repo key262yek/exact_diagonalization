@@ -1,5 +1,5 @@
 use fnv::FnvHashMap;
-use ndarray_linalg::close_l2;
+use ndarray_linalg::Norm;
 use ndarray_linalg::{Eigh, UPLO, generate::conjugate};
 use exact_diagonalization::prelude::*;
 use rand_pcg::Pcg64;
@@ -96,6 +96,10 @@ fn test_quench_positive_work() -> (){
         result = result + change.map(|x| if x.re > 0.000001 {p} else {0.0});
     }
 
-    let truth_res : Array1<f64> = arr1(&[0.9985, 0.9983, 0.9976, 0.9939, 0.6061, 0.9945, 0.0, 0.9972, 0.9972, 0.8416, 0.0, 0.34, 0.0, 0.9983, 0.0, 0.0, 0.0, 0.441, 0.0, 0.9987, 0.0, 0.0]);
-    close_l2(&result, &truth_res, rtol);
+    let truth_res : Array1<f64> = arr1(&[0.9985, 0.9983, 0.9976, 0.6061, 0.9939, 0.9945,  0.0, 0.9972, 0.9972, 0.8416, 0.34, 0.0, 0.0, 0.9983, 0.0, 0.0, 0.441, 0.0, 0.0,  0.9987, 0.0, 0.0]);
+    let truth_res2 : Array1<f64> = arr1(&[0.9985, 0.9983, 0.9976, 0.9939, 0.6061, 0.9945, 0.0, 0.9972, 0.9972, 0.8416, 0.0, 0.34, 0.0, 0.9983, 0.0, 0.0, 0.0, 0.441, 0.0, 0.9987, 0.0, 0.0]);
+
+    let tol = (&result - &truth_res).norm_l2() / &truth_res.norm_l2();
+    let tol2 = (&result - &truth_res2).norm_l2() / &truth_res2.norm_l2();
+    assert!((tol < rtol) || (tol2 < rtol));
 }

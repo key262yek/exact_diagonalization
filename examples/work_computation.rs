@@ -78,7 +78,6 @@ fn main() -> (){
     let filepath = Path::new(&args[7]);
 
     let rtol : f64 = 1e-4;
-    let p : f64 = 1f64;
     let egn_nk = EigenNumMomentum::new(m, k);
 
 

@@ -2,7 +2,6 @@ use fnv::FnvHashMap;
 use ndarray_linalg::close_l2;
 use ndarray_linalg::{Eigh, UPLO, generate::conjugate};
 use exact_diagonalization::prelude::*;
-use num::Complex;
 use rand_pcg::Pcg64;
 use rand::distributions::Uniform;
 use rand::Rng;
