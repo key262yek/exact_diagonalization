@@ -2,6 +2,7 @@ use fnv::FnvHashMap;
 use ndarray_linalg::close_l2;
 use ndarray_linalg::{Eigh, UPLO, generate::conjugate};
 use exact_diagonalization::prelude::*;
+use num::Complex;
 use rand_pcg::Pcg64;
 use rand::distributions::Uniform;
 use rand::Rng;
@@ -64,10 +65,13 @@ fn test_quench() -> (){
     let basis_gen = BasisNK::new(EigenNumMomentum::new(m, k), l);
     let (basis, indices) = basis_gen.build().unwrap();
 
+    let eye : Array2<Complex64> = Array2::from_diag(&Array1::<Complex64>::ones(basis.len()));
+
     let h0 = hamiltonian_with(&basis, &indices, delta).unwrap();
     let (eval0, evec0) = &h0.eigh(UPLO::Lower).unwrap();
     let conj_evec0 : Array2<Complex64> = conjugate(evec0);
     let energy_diag = Array2::from_diag(&eval0.map(|&x| Complex64::new(x, 0.0)));
+    close_l2(&conj_evec0.dot(evec0), &eye, rtol);
 
     let h1 = diag_ising(&basis, lambda).unwrap();
 
@@ -90,12 +94,19 @@ fn test_quench() -> (){
     close_l2(eval2, &truth_eval2, rtol);
     close_l2(evec2, &truth_evec2, rtol);
 
+    let conj_evec2 : Array2<Complex64> = conjugate(evec2);
+    close_l2(&conj_evec2.dot(evec2), &eye, rtol);
+
+
     let unitary1 = Array2::from_diag(&eval2.map(|&x| Complex64::new(0.0, x).exp()));
     let truth_uni : Array2<Complex64> = arr2(&[
         [Complex64 { re: 0.020164749030229835, im: -0.9997966707768874 }, Complex64 { re: 0.0, im: 0.0 }],
         [Complex64 { re: 0.0, im: 0.0 }, Complex64 { re: 0.4320851980779638, im: -0.9018327902676453 }]
     ]);
     close_l2(&unitary1, &truth_uni, rtol);
+
+    let conj_uni : Array2<Complex64> = conjugate(&unitary1);
+    close_l2(&conj_uni.dot(&unitary1), &eye, rtol);
 
     let x1 = conj_evec0.dot(evec2);
     let truth_x1 : Array2<Complex64> = arr2(&[
@@ -111,6 +122,8 @@ fn test_quench() -> (){
     ]);
     close_l2(&x2, &truth_x2, rtol);
 
+    close_l2(&x2.dot(&x1), &eye, rtol);
+
     let right = x1.dot(&unitary1).dot(&x2);
     let truth_right : Array2<Complex64> = arr2(&[
         [Complex64 { re: 0.020398531270699308, im: -0.9997410721400063 }, Complex64 { re: 0.009810455205422956, im: 0.002333145304407931 }],
@@ -124,6 +137,8 @@ fn test_quench() -> (){
         [Complex64 { re: 0.009810455205422956, im: -0.002333145304407931 }, Complex64 { re: 0.43185141583749437, im: 0.9018883889045265 }]
     ]);
     close_l2(&left, &truth_left, rtol);
+
+    close_l2(&left.dot(&right), &eye, rtol);
 
     let change = (left.dot(&energy_diag).dot(&right) - &energy_diag).into_diag();
     let truth_change : Array1<Complex64> = arr1(&[

@@ -1,5 +1,4 @@
 use fnv::FnvHashMap;
-use ndarray_linalg::{Eigh, UPLO, generate::conjugate};
 use exact_diagonalization::prelude::*;
 use std::env;
 use std::io::prelude::*;
@@ -59,8 +58,6 @@ fn diag_ising(basis : &Vec<EigenState<EigenNumMomentum>>, delta : f64)
 
 fn main() -> (){
     let args: Vec<String> = env::args().collect();
-    println!("{:?}", env::current_dir());
-    println!("{:?}", args);
 
     let l = args[1].parse::<usize>().unwrap();
     let m = args[2].parse::<usize>().unwrap();
@@ -96,15 +93,6 @@ fn main() -> (){
         let h2 = (&h1 * r) + &h0;
 
         let (eval2, evec2) = &h2.eigh(UPLO::Lower).unwrap();
-        // let conj_evec2 : Array2<Complex64> = conjugate(evec2);
-
-        // let unitary1 = Array2::from_diag(&eval2.map(|&x| Complex64::new(0.0, x).exp()));
-        // let unitary2 = Array2::from_diag(&eval2.map(|&x| Complex64::new(0.0, -x).exp()));
-
-        // let x1 = conj_evec0.dot(evec2);
-        // let x2 = conj_evec2.dot(evec0);
-
-        // let change = (x1.dot(&unitary2).dot(&x2).dot(&energy_diag).dot(&x1).dot(&unitary1).dot(&x2) - &energy_diag).into_diag();
 
         let unitary1 = Array2::from_diag(&eval2.map(|&x| Complex64::new(0.0, x).exp()));
         let x1 = conj_evec0.dot(evec2);
@@ -116,15 +104,6 @@ fn main() -> (){
 
         result = result + change.map(|x| if x.re > 0.000001 {p} else {0.0});
 
-        // println!("{:?}", &h2);
-        // println!("{:?}", &eval2);
-        // println!("{:?}", &evec2);
-        // println!("{:?}", &unitary1);
-        // println!("{:?}", &x1);
-        // println!("{:?}", &x2);
-        // println!("{:?}", &right);
-        // println!("{:?}", &left);
-        // println!("{:?}", &change);
         println!("{:?}", start.elapsed());
     }
 

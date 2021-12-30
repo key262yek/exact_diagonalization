@@ -1,4 +1,6 @@
+use ndarray_linalg::LinearOperator;
 use fnv::FnvHashMap;
+
 use ndarray_linalg::close_l2;
 use ndarray_linalg::{Eigh, UPLO, generate::conjugate};
 use exact_diagonalization::prelude::*;
@@ -54,7 +56,7 @@ fn diag_ising(basis : &Vec<EigenState<EigenNumMomentum>>, delta : f64)
 }
 
 #[test]
-fn test_quench_positive_work() -> (){
+fn test_quench_faster() -> (){
     let l = 10;
     let m = 4;
     let k = 0;
@@ -70,7 +72,7 @@ fn test_quench_positive_work() -> (){
     let h0 = hamiltonian_with(&basis, &indices, delta).unwrap();
     let (eval0, evec0) = &h0.eigh(UPLO::Lower).unwrap();
     let conj_evec0 : Array2<Complex64> = conjugate(evec0);
-    let energy_diag = Array2::from_diag(&eval0.map(|&x| Complex64::new(x, 0.0)));
+    let energy_diag = eval0.map(|&x| Complex64::new(x, 0.0));
 
     let h1 = diag_ising(&basis, lambda).unwrap();
 
@@ -89,9 +91,9 @@ fn test_quench_positive_work() -> (){
         let x1 = conj_evec0.dot(evec2);
         let x2 : Array2<Complex64> = conjugate(&x1);
         let right = x1.dot(&unitary1).dot(&x2);
-        let left : Array2<Complex64> = conjugate(&right);
+        let right_abs = right.map(|x| x * x.conj());
 
-        let change = (left.dot(&energy_diag).dot(&right) - &energy_diag).into_diag();
+        let change = right_abs.apply(&energy_diag) - &energy_diag;
 
         result = result + change.map(|x| if x.re > 0.000001 {p} else {0.0});
     }

@@ -32,6 +32,19 @@ impl SimpleState{
     }
 }
 
+pub fn is_rep(num : usize, length : usize) -> bool{
+    let mut m = num;
+    loop{
+        m = cyclic_move_unsafe(m, length);
+        if m == num{
+            break;
+        } else if m < num {
+            return false;
+        }
+    }
+    return true;
+}
+
 pub fn bit_flip(num: usize, length: usize, i: usize, j: usize) -> Result<usize, Error> {
     if length <= i || length <= j || i == j {
         return Err(Error::make_error_syntax(ErrorCode::InvalidBitIndex));

@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::{prelude::*, states::bit_fns::{is_rep, sum_bit}};
 
 pub mod number;
 pub mod momentum;
@@ -22,7 +22,7 @@ impl Basis {
     pub fn build_n(&self) -> (FnvHashMap<EigenNumber, Vec<NumberState>>, FnvHashMap<(EigenNumber, usize), usize>){
         let length = self.length;
         let max_state = 1 << length;
-        let mut magnet_sets : FnvHashMap<EigenNumber, Vec<NumberState>> = FnvHashMap::default();
+        let mut bases : FnvHashMap<EigenNumber, Vec<NumberState>> = FnvHashMap::default();
         let mut indices : FnvHashMap<(EigenNumber, usize), usize> = FnvHashMap::default();
 
        for n in 0..max_state {
@@ -30,11 +30,11 @@ impl Basis {
             let m = state.total_number();
             let egn_v = EigenNumber::new(m);
 
-            match magnet_sets.get_mut(&egn_v){
+            match bases.get_mut(&egn_v){
                 None => {
                     let mut basis_n : Vec<NumberState> = Vec::with_capacity(binomial(length, m));
                     basis_n.push(NumberState::new(state));
-                    magnet_sets.insert(egn_v, basis_n);
+                    bases.insert(egn_v, basis_n);
 
                     indices.insert((egn_v, n), 0);
                 },
@@ -46,7 +46,36 @@ impl Basis {
             }
         }
 
-        return (magnet_sets, indices);
+        return (bases, indices);
+    }
+
+    pub fn build_light_n(&self) -> (FnvHashMap<EigenNumber, Vec<(usize, usize)>>, FnvHashMap<(EigenNumber, usize), usize>){
+        let length = self.length;
+        let max_state = 1 << length;
+        let mut bases : FnvHashMap<EigenNumber, Vec<(usize, usize)>> = FnvHashMap::default();
+        let mut indices : FnvHashMap<(EigenNumber, usize), usize> = FnvHashMap::default();
+
+       for n in 0..max_state {
+            let m = sum_bit(n);
+            let egn_v = EigenNumber::new(m);
+
+            match bases.get_mut(&egn_v){
+                None => {
+                    let mut basis_n : Vec<(usize, usize)> = Vec::with_capacity(binomial(length, m));
+                    basis_n.push((n, length));
+                    bases.insert(egn_v, basis_n);
+
+                    indices.insert((egn_v, n), 0);
+                },
+                Some(basis_n) => {
+                    let idx = basis_n.len();
+                    basis_n.push((n, length));
+                    indices.insert((egn_v, n), idx);
+                },
+            }
+        }
+
+        return (bases, indices);
     }
 
     pub fn build_nk(&self) -> (FnvHashMap<EigenNumMomentum, Vec<NumMomentumState>>, FnvHashMap<(EigenNumMomentum, usize), (usize, usize)>){
@@ -87,6 +116,62 @@ impl Basis {
                             indices.insert((egn_nk, num), (idx, i));
                         }
                         basis_nk.push(nkstate);
+                    }
+                };
+            }
+        }
+
+        return (bases, indices);
+    }
+
+    pub fn build_light_nk(&self) -> (FnvHashMap<EigenNumMomentum, Vec<(usize, usize)>>, FnvHashMap<(EigenNumMomentum, usize), (usize, usize)>){
+
+        let length = self.length;
+        let max_state = 1 << length;
+        let mut bases : FnvHashMap<EigenNumMomentum, Vec<(usize, usize)>> = FnvHashMap::default();
+        let mut indices : FnvHashMap<(EigenNumMomentum, usize), (usize, usize)> = FnvHashMap::default();
+
+        for n in 0..max_state {
+            if !is_rep(n, length){
+                continue;
+            }
+
+            let m = sum_bit(n);
+            let period = period_unsafe(n, length);
+            for k in CommenIterator::new(period, length){
+                let egn_nk = EigenNumMomentum::new(m, k);
+
+                match bases.get_mut(&egn_nk){
+                    None => {
+                        let mut temp = n;
+                        let mut i = 0;
+                        loop{
+                            indices.insert((egn_nk, temp), (0, i));
+                            temp = cyclic_move_unsafe(temp, length);
+                            i += 1;
+                            if temp == n{
+                                break;
+                            }
+                        }
+
+                        bases.insert(egn_nk, vec![(n, length)]);
+
+                    },
+                    Some(basis_nk) => {
+                        let idx = basis_nk.len();
+
+                        let mut temp = n;
+                        let mut i = 0;
+                        loop{
+                            indices.insert((egn_nk, temp), (idx, i));
+                            temp = cyclic_move_unsafe(temp, length);
+                            i += 1;
+                            if temp == n{
+                                break;
+                            }
+                        }
+
+                        basis_nk.push((n, length));
                     }
                 };
             }
@@ -146,5 +231,85 @@ mod test {
                 _ => unreachable!()
             }
         }
+    }
+
+    #[test]
+    fn test_whole_basis_light_n(){
+        let length = 2;
+        let basis_gen  = Basis::new(length);
+        let (base, indices) = basis_gen.build_light_n();
+
+        for (egn_v, basis_n) in base.iter(){
+            match egn_v.total_number(){
+                0 => {
+                    assert_eq!(*basis_n, vec![(0, 2)]);
+                },
+                1 => {
+                    assert_eq!(*basis_n, vec![(1, 2), (2, 2)]);
+                },
+                2 => {
+                    assert_eq!(*basis_n, vec![(3, 2)]);
+                },
+                _ => unreachable!()
+            }
+        }
+
+        for ((egn_v, n), idx) in indices.iter(){
+            match n{
+                0 => {
+                    assert_eq!(egn_v.total_number(), 0);
+                    assert_eq!(*idx, 0);
+                },
+                1 => {
+                    assert_eq!(egn_v.total_number(), 1);
+                    assert_eq!(*idx, 0);
+                },
+                2 => {
+                    assert_eq!(egn_v.total_number(), 1);
+                    assert_eq!(*idx, 1);
+                },
+                3 => {
+                    assert_eq!(egn_v.total_number(), 2);
+                    assert_eq!(*idx, 0);
+                },
+                _ => unreachable!()
+            }
+        }
+    }
+
+    #[test]
+    fn test_whole_basis_nk(){
+        let length = 4;
+        let basis_gen  = Basis::new(length);
+        let (base, indices) = basis_gen.build_nk();
+
+        assert_eq!(base.get(&EigenNumMomentum::new(2, 0)),
+            Some(&vec![NumMomentumState::new(SimpleState{rep : 3, length}, 0).unwrap(),
+                NumMomentumState::new(SimpleState{rep : 5, length}, 0).unwrap()]));
+
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 3)), Some(&(0, 0)));
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 5)), Some(&(1, 0)));
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 6)), Some(&(0, 3)));
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 9)), Some(&(0, 1)));
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 10)), Some(&(1, 1)));
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 12)), Some(&(0, 2)));
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 0)), None);
+    }
+
+    #[test]
+    fn test_whole_basis_light_nk(){
+        let length = 4;
+        let basis_gen  = Basis::new(length);
+        let (base, indices) = basis_gen.build_light_nk();
+
+        assert_eq!(base.get(&EigenNumMomentum::new(2, 0)), Some(&vec![(3, 4), (5, 4)]));
+
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 3)), Some(&(0, 0)));
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 5)), Some(&(1, 0)));
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 6)), Some(&(0, 3)));
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 9)), Some(&(0, 1)));
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 10)), Some(&(1, 1)));
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 12)), Some(&(0, 2)));
+        assert_eq!(indices.get(&(EigenNumMomentum::new(2, 0), 0)), None);
     }
 }

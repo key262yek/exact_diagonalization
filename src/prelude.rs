@@ -7,7 +7,7 @@ pub(crate) use crate::{
 };
 
 pub use ndarray::{Array1, arr1, Array2, arr2};
-pub use ndarray_linalg::diagonal::Diagonal;
+pub use ndarray_linalg::{Eigh,  UPLO, generate::conjugate, LinearOperator};
 pub use num_complex::Complex64;
 pub use std::f64::consts::PI;
 pub use std::collections::HashMap;
