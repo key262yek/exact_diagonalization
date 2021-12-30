@@ -140,9 +140,9 @@ fn main() -> (){
     };
     let (eval0, evec0) = &arc_target_h0.eigh(UPLO::Lower).unwrap();
     let min_energy_gap = eval0.iter().zip(eval0.iter().skip(1))
-                            .map(|(x1, x2)| x2 - x1)
+                            .map(|(x1, x2)| if (x2 - x1).abs() < 1e-9 {std::f64::MAX} else {x2 - x1})
                             .min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-    let rtol = threshold * min_energy_gap;
+    let rtol = (threshold * min_energy_gap).max(1e-4);
     // println!("{}", min_energy_gap);
 
     let arc_target_h1 = Arc::new(diag_ising(&arc_basis, lambda).unwrap());
