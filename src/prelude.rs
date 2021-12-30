@@ -28,5 +28,6 @@ pub use crate::{
     },
     hamiltonian::{
         PeriodicIsing,PeriodicNearestXXZ, PeriodicNextNearestXXZ,
+        degeneracy_pair, degeneracy_triple, prepare_energy_map, count_degeneracy_from,
     }
 };
