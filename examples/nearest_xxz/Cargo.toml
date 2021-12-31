@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-exact_diagonalization = {path = "../exact_diagonalization"}
+exact_diagonalization = {path = "../../../exact_diagonalization"}
 ndarray = "0.15.2"
 ndarray-linalg = {version = "0.14.1", features = ["openblas-system"]}
 blas-src = {version = "0.8", features = ["openblas"] }

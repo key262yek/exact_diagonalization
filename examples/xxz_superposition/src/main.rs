@@ -1,4 +1,4 @@
-use exact_diagonalization::hamiltonian::{count_degeneracy_from, degeneracy_pair, prepare_energy_map};
+use exact_diagonalization::hamiltonian::{count_degeneracy_from, prepare_energy_map};
 use exact_diagonalization::states::bit_fns::period_unsafe;
 use fnv::FnvHashMap;
 use exact_diagonalization::prelude::*;
@@ -10,8 +10,6 @@ use rand_pcg::Pcg64;
 use rand::distributions::Uniform;
 use rand::Rng;
 use std::time::Instant;
-use std::sync::{Arc, Mutex};
-use std::thread;
 
 
 
@@ -33,7 +31,7 @@ fn hamiltonian_nearest(basis : &Vec<(usize, usize)>, indices : &FnvHashMap<(Eige
                     -> Result<Array2<Complex64>, ()>{
 
     let length = basis[0].1;
-    let xxz = PeriodicNearestXXZ::new(1f64,  delta);
+    let xxz = PeriodicNearestXXZ::new(1f64, delta);
     let omega_k = egn_nk.phase_factor(length);
 
     let n = basis.len();
@@ -89,17 +87,17 @@ fn diag_ising(basis : &Vec<(usize, usize)>, delta : f64) -> Result<Array2<Comple
     return Ok(hamiltonian);
 }
 
-fn compute_energy_change(h0 : &Array2<Complex64>, h1 : &Array2<Complex64>, r : f64, ediag : &Array1<Complex64>, cvec : &Array2<Complex64>) -> Array1<Complex64>{
+fn compute_energy_change(h0 : &Array2<Complex64>, h1 : &Array2<Complex64>, r : f64, tau : f64, ediag : &Array2<Complex64>, cvec : &Array2<Complex64>) -> Array2<Complex64>{
 
     let h2 = (h1 * r) + h0;
     let (eval2, evec2) = &h2.eigh(UPLO::Lower).unwrap();
-    let unitary1 = Array2::from_diag(&eval2.map(|&x| Complex64::new(0.0, x).exp()));
+    let unitary1 = Array2::from_diag(&eval2.map(|&x| Complex64::new(0.0, x * tau).exp()));
     let x1 = cvec.dot(evec2);
     let x2 : Array2<Complex64> = conjugate(&x1);
     let right = x1.dot(&unitary1).dot(&x2);
-    let right_abs = right.map(|x| x * x.conj());
+    let left : Array2<Complex64> = conjugate(&right);
 
-    right_abs.apply(ediag) - ediag
+    left.dot(ediag).dot(&right) - ediag
 }
 
 fn main() -> (){
@@ -113,10 +111,9 @@ fn main() -> (){
     let k = args.next().unwrap().parse::<usize>().unwrap();
     let delta  = args.next().unwrap().parse::<f64>().unwrap();
     let lambda = args.next().unwrap().parse::<f64>().unwrap();
+    let tau    = args.next().unwrap().parse::<f64>().unwrap();
     let num_en     = args.next().unwrap().parse::<usize>().unwrap();
     let org_seed = args.next().unwrap().parse::<usize>().unwrap();
-    let num_thread = args.next().unwrap().parse::<usize>().unwrap();
-    let en_p_thr = num_en / num_thread;
     let threshold = args.next().unwrap().parse::<f64>().unwrap();
 
     let p : f64 = 1f64 / (num_en as f64);
@@ -127,27 +124,27 @@ fn main() -> (){
     let basis_gen = Basis::new(l);
     let (basis_map, indices) = basis_gen.build_light_nk();
 
-    let filepath = format_args!("output/parallel_ed_p_Index_{}_SysSize_{}_M_{}_K_{}_Delta_{:0e}_Lambda_{:0e}_Ensem_{}_Seed_{}_Thr_{:0e}.dat", interaction_info, l, m, k, delta, lambda, num_en, org_seed, threshold).to_string();
+    let filepath = format_args!("output/ed_sppn_p_Index_{}_SysSize_{}_M_{}_K_{}_Delta_{:0e}_Lambda_{:0e}_Tau_{:0e}_Ensem_{}_Seed_{}_Thr_{:0e}.dat", interaction_info, l, m, k, delta, lambda, tau, num_en, org_seed, threshold).to_string();
     let output = File::create(filepath).unwrap();
     let mut writer = BufWriter::new(&output);
-    let mut hamiltonian_set : FnvHashMap<EigenNumMomentum, (Array2<Complex64>, Array2<Complex64>, Array1<Complex64>, Array2<Complex64>)> = FnvHashMap::default();
+    let mut hamiltonian_set : FnvHashMap<EigenNumMomentum, (Array2<Complex64>, Array2<Complex64>, Array2<Complex64>, Array2<Complex64>)> = FnvHashMap::default();
 
-    let arc_basis = Arc::new(basis_map.get(&egn_nk).unwrap().clone());
-    let arc_target_h0 = match interaction_info{
-        0 => Arc::new(hamiltonian_nearest(&arc_basis, &indices, egn_nk, delta).unwrap()),
-        1 => Arc::new(hamiltonian_next_nearest(&arc_basis, &indices, egn_nk, delta).unwrap()),
+    let basis = basis_map.get(&egn_nk).unwrap();
+    let target_h0 = match interaction_info{
+        0 => hamiltonian_nearest(basis, &indices, egn_nk, delta).unwrap(),
+        1 => hamiltonian_next_nearest(basis, &indices, egn_nk, delta).unwrap(),
         _ => panic!(),
     };
-    let (eval0, evec0) = &arc_target_h0.eigh(UPLO::Lower).unwrap();
+    let (eval0, evec0) = &target_h0.eigh(UPLO::Lower).unwrap();
+
     let min_energy_gap = eval0.iter().zip(eval0.iter().skip(1))
                             .map(|(x1, x2)| if (x2 - x1).abs() < 1e-9 {std::f64::MAX} else {x2 - x1})
                             .min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
     let rtol = (threshold * min_energy_gap).max(1e-4);
-    // println!("{}", min_energy_gap);
 
-    let arc_target_h1 = Arc::new(diag_ising(&arc_basis, lambda).unwrap());
-    let arc_target_cvec0 : Arc<Array2<Complex64>> = Arc::new(conjugate(evec0));
-    let arc_target_ediag0 = Arc::new(eval0.map(|&x| Complex64::new(x, 0.0)));
+    let target_h1 = diag_ising(basis, lambda).unwrap();
+    let target_cvec0 : Array2<Complex64> = conjugate(evec0);
+    let target_ediag0 = Array2::from_diag(&eval0.map(|&x| Complex64::new(x, 0.0)));
 
     let mut energy_map = prepare_energy_map(egn_nk,eval0, rtol);
 
@@ -165,91 +162,56 @@ fn main() -> (){
         if count_degeneracy_from(&mut energy_map, egn, eval, rtol){
             let other_h1 = diag_ising(other_basis, lambda).unwrap();
             let cvec = conjugate(evec);
-            let ediag = eval.map(|&x| Complex64::new(x, 0.0));
+            let ediag = Array2::from_diag(&eval.map(|&x| Complex64::new(x, 0.0)));
             hamiltonian_set.insert(egn, (other_h, other_h1, ediag, cvec));
         }
     }
 
-    let (num_deg, map_deg) = degeneracy_pair(arc_basis.len(), &energy_map).unwrap();
+    let (num_deg, map_deg) = degeneracy_triple(basis.len(), &energy_map).unwrap();
+
 
     let seed = (org_seed + l + m + k + interaction_info + (delta + lambda) as usize) as u128;
-    let arc_rng = Arc::new(Mutex::new(rng_seed(seed)));
+    let mut rng = rng_seed(seed);
     let uni = Uniform::new(-1f64, 1f64);
 
-    let arc_result : Arc<Mutex<Array1<f64>>> = Arc::new(Mutex::new(Array1::zeros(arc_basis.len())));
-    let mut handles = vec![];
+    let mut result : Array1<f64> = Array1::zeros(basis.len());
+    for _ in 0..num_en{
+        let _start = Instant::now();
 
-    let arc_hamiltonian_set = Arc::new(hamiltonian_set);
-    let arc_num_deg = Arc::new(num_deg);
-    let arc_map_deg = Arc::new(map_deg);
+        let r = rng.sample(uni);
+        let mut total : Array1<Complex64> = Array1::zeros(basis.len());
 
-    for thrd in 0..num_thread {
-        let mutex_result = Arc::clone(&arc_result);
-        let mutex_rng = Arc::clone(&arc_rng);
-        let basis = Arc::clone(&arc_basis);
-        let target_h0= Arc::clone(&arc_target_h0);
-        let hamiltonian_set = Arc::clone(&arc_hamiltonian_set);
-        let target_h1 = Arc::clone(&arc_target_h1);
-        let target_cvec0 = Arc::clone(&arc_target_cvec0);
-        let target_ediag0 = Arc::clone(&arc_target_ediag0);
-        let num_deg = Arc::clone(&arc_num_deg);
-        let map_deg = Arc::clone(&arc_map_deg);
-        let handle = thread::spawn( move ||{
-            let start = Instant::now();
-            for _en in 0..en_p_thr{
-                let r = {
-                    let mut rng = mutex_rng.lock().unwrap();
-                    rng.sample(uni)
-                };
-                let mut total : Array1<Complex64> = Array1::zeros(basis.len());
+        let change = compute_energy_change(&target_h0, &target_h1, r, tau, &target_ediag0, &target_cvec0);
+        total = total + &change.diag() * &num_deg;
 
-                let change = compute_energy_change(&target_h0, &target_h1, r, &target_ediag0, &target_cvec0);
-                total = total + &change * &(*num_deg);
-
-                match map_deg.get(&egn_nk){
-                    Some(v) => {
-                        for (from, to) in v{
-                            total[*to]+= change[*from] * num_deg[*to];
-                        }
-                    },
-                    None => {},
+        match map_deg.get(&egn_nk){
+            Some(v) => {
+                for (idx1, idx2, to) in v{
+                    total[*to] += change[[*idx1, *idx2]] * num_deg[*to];
                 }
+            },
+            None => {},
+        }
 
-                for (egn, (h0, h1, ediag, cvec)) in hamiltonian_set.iter(){
-                    let change = compute_energy_change(h0, h1, r, ediag, cvec);
-                    for (from, to) in map_deg.get(egn).unwrap(){
-                        total[*to]+= change[*from] * num_deg[*to];
-                    }
-                }
-
-                {
-                    let mut result = mutex_result.lock().unwrap();
-                    for (res, &work) in result.iter_mut().zip(total.map(|x| if x.re > rtol {p} else {0.0}).iter()){
-                        *res += work;
-                    }
-                }
+        for (egn, (h0, h1, ediag, cvec)) in hamiltonian_set.iter(){
+            let change = compute_energy_change(h0, h1, r, tau, ediag, cvec);
+            for (idx1, idx2, to) in map_deg.get(egn).unwrap(){
+                total[*to]+= change[[*idx1, *idx2]] * num_deg[*to];
             }
-            println!("Thread {} works with ensemble {} in time {:?}", thrd, en_p_thr, start.elapsed());
-        });
-        handles.push(handle);
-    };
-    for handle in handles{
-        handle.join().unwrap();
+        }
+
+        result = result + total.map(|x| if x.re > rtol {p} else {0.0});
+        // println!("{:?}", start.elapsed());
     }
 
-    let result = arc_result.lock().unwrap();
-    for i in 0..arc_basis.len(){
+    for i in 0..basis.len(){
         let v = eval0[i];
         let pv = result[i];
-        let d = arc_num_deg[i];
+        let d = num_deg[i];
         if d < 0f64{
             continue;
         }
         write!(&mut writer,"{:.05e}\t{:.05e}\n", v, pv).unwrap();
     }
-    println!("Total time : {:?}", total_start.elapsed());
+    println!("Total time {:?}", total_start.elapsed());
 }
-
-// fn main(){
-//     println!("Hello World");
-// }
