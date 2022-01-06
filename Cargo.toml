@@ -1,6 +1,6 @@
 [package]
 name = "exact_diagonalization"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Myeongseon Choi <key262yek@gmail.com>"]
 edition = "2018"
 

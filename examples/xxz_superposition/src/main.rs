@@ -204,6 +204,8 @@ fn main() -> (){
         // println!("{:?}", start.elapsed());
     }
 
+    write!(&mut writer,"energy\tenergy_gap\tprobability\tdegeneracy\n").unwrap();
+    let mut temp = eval0[0];
     for i in 0..basis.len(){
         let v = eval0[i];
         let pv = result[i];
@@ -211,7 +213,8 @@ fn main() -> (){
         if d < 0f64{
             continue;
         }
-        write!(&mut writer,"{:.05e}\t{:.05e}\n", v, pv).unwrap();
+        write!(&mut writer,"{:.05e}\t{:.5e}\t{:.05e}\t{}\n", v, v - temp, pv, (1.0 / d) as usize).unwrap();
+        temp = v;
     }
     println!("Total time {:?}", total_start.elapsed());
 }

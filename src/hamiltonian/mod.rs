@@ -1,6 +1,6 @@
 #[allow(unused_imports)]
 use std::hash::Hash;
-use genawaiter::{sync::gen, sync_producer, yield_};
+use genawaiter::{sync::gen, yield_};
 use crate::prelude::*;
 
 #[derive(Copy, Clone, Debug)]
@@ -15,8 +15,9 @@ impl PeriodicIsing{
         }
     }
 
-    pub fn apply_to<S>(&self, state : &S) -> f64
-        where S : State{
+    pub fn apply_to<S, T>(&self, state : &S) -> f64
+        where S : State<T>,
+              T : EigenValue{
 
         let mut sum = 0f64;
         for (si, sj) in state.periodic_pair_iter(){
@@ -45,8 +46,9 @@ impl PeriodicNearestXXZ{
         }
     }
 
-    pub fn apply_to<'a, S>(&'a self, state : &'a S) -> impl Iterator<Item = (usize, f64)> + 'a
-        where S : State + 'static{
+    pub fn apply_to<'a, S, T>(&'a self, state : &'a S) -> impl Iterator<Item = (usize, f64)> + 'a
+        where S : State<T>,
+              T : EigenValue{
         gen!({
             let num = state.rep();
             let mut sum = 0f64;
@@ -81,8 +83,9 @@ impl PeriodicNextNearestXXZ{
         }
     }
 
-    pub fn apply_to<'a, S>(&'a self, state : &'a S) -> impl Iterator<Item = (usize, f64)> + 'a
-        where S : State + 'static{
+    pub fn apply_to<'a, S, T>(&'a self, state : &'a S) -> impl Iterator<Item = (usize, f64)> + 'a
+        where S : State<T>,
+              T : EigenValue{
         gen!({
             let num = state.rep();
             let mut sum = 0f64;
@@ -301,7 +304,7 @@ use super::*;
     #[test]
     fn test_degeneracy_pair(){
         let length = 5;
-        let mut energy_map : FnvHashMap<i32, Vec<(usize, usize)>> = FnvHashMap::default();
+        let mut energy_map : FnvHashMap<i128, Vec<(usize, usize)>> = FnvHashMap::default();
         energy_map.insert(0, vec![(1, 0), (1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 2), (3, 3)]);
 
         let (counts, pair_map) = degeneracy_pair(length, &energy_map).unwrap();
@@ -325,7 +328,7 @@ use super::*;
     #[test]
     fn test_degeneracy_triple(){
         let length = 5;
-        let mut energy_map : FnvHashMap<i32, Vec<(usize, usize)>> = FnvHashMap::default();
+        let mut energy_map : FnvHashMap<i128, Vec<(usize, usize)>> = FnvHashMap::default();
         energy_map.insert(0, vec![(1, 0), (1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 2), (3, 3)]);
 
         let (counts, pair_map) = degeneracy_triple(length, &energy_map).unwrap();

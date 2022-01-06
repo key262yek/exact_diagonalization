@@ -158,7 +158,7 @@ fn main() -> (){
 
     let (num_deg, map_deg) = degeneracy_triple(basis.len(), &energy_map).unwrap();
 
-    let watch_idx = energy_map.get(&((watch_energy / rtol) as i32)).unwrap()[0].1;
+    let watch_idx = energy_map.get(&((watch_energy / rtol) as i128)).unwrap()[0].1;
     let filepath = format_args!("examples/output/ed_sppn_work_of_ptl_{}_Index_{}_SysSize_{}_M_{}_K_{}_Delta_{:0e}_Lambda_{:0e}_Ensem_{}_Seed_{}.dat",  watch_idx, interaction_info, l, m, k, delta, lambda, num_en, org_seed).to_string();
     let output = File::create(filepath).unwrap();
     let mut writer = BufWriter::new(&output);

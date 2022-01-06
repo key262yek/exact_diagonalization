@@ -9,9 +9,10 @@ pub mod iterator;
 pub mod number;
 pub mod momentum;
 
-pub trait State{
+pub trait State<T : EigenValue>{
     fn rep(&self) -> usize;
     fn length(&self) -> usize;
+    fn value(&self) -> T;
 
     fn bit_iter(&self) -> BitIterator{
         match BitIterator::new(self.rep(), self.length()){
@@ -64,13 +65,17 @@ pub trait State{
     }
 }
 
-impl State for (usize, usize){
+impl State<EmptyValue> for (usize, usize){
     fn rep(&self) -> usize{
         self.0
     }
 
     fn length(&self) -> usize{
         self.1
+    }
+
+    fn value(&self) -> EmptyValue{
+        EmptyValue{}
     }
 }
 
@@ -97,13 +102,17 @@ impl SimpleState{
     }
 }
 
-impl State for SimpleState{
+impl State<EmptyValue> for SimpleState{
     fn rep(&self) -> usize{
         self.rep
     }
 
     fn length(&self) -> usize{
         self.length
+    }
+
+    fn value(&self) -> EmptyValue{
+        EmptyValue{}
     }
 }
 
@@ -126,9 +135,16 @@ impl EigenValue for usize {}
 // =====================================================================================================
 // =====================================================================================================
 
-pub trait AddInfo<W>{
-    fn add_info(&self, info : usize) -> W;
+pub trait AddInfo<W: ?Sized>{
+    type Info;
+    fn add_info(&self, info : Self::Info) -> W;
 }
+
+pub trait ConvertFrom<T>{
+    type Info;
+    fn from(value : T, info : Self::Info) -> Self;
+}
+
 
 // =====================================================================================================
 // =====================================================================================================
@@ -143,8 +159,16 @@ impl EmptyValue{
 }
 
 impl AddInfo<EigenNumber> for EmptyValue{
-    fn add_info(&self, info : usize) -> EigenNumber{
+    type Info = usize;
+    fn add_info(&self, info : Self::Info) -> EigenNumber{
         EigenNumber::new(info)
+    }
+}
+
+impl AddInfo<EigenNumMomentum> for EmptyValue{
+    type Info = (usize, usize);
+    fn add_info(&self, info : Self::Info) -> EigenNumMomentum{
+        EigenNumMomentum::new(info.0, info.1)
     }
 }
 
@@ -167,7 +191,7 @@ impl Representation<EmptyValue> for usize {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
-pub struct RepWith<T : EigenValue>(T, usize);
+pub struct RepWith<T : EigenValue>(pub T, pub usize);
 
 impl<T> RepWith<T>
     where T : EigenValue{
@@ -188,8 +212,18 @@ impl<T : EigenValue> Representation<T> for RepWith<T>{
 impl<T, W> AddInfo<RepWith<W>> for RepWith<T>
     where T : AddInfo<W> + EigenValue,
           W : EigenValue{
-    fn add_info(&self, info : usize) -> RepWith<W>{
+    type Info = T::Info;
+    fn add_info(&self, info : Self::Info) -> RepWith<W>{
         RepWith(self.0.add_info(info), self.1)
+    }
+}
+
+impl<T, W> ConvertFrom<RepWith<W>> for RepWith<T>
+    where T : ConvertFrom<W> + EigenValue,
+          W : EigenValue{
+    type Info = T::Info;
+    fn from(value : RepWith<W>, info : Self::Info) -> Self{
+        RepWith(T::from(value.0, info), value.1)
     }
 }
 
@@ -253,7 +287,7 @@ impl<T> Hash for EigenState<T>
     }
 }
 
-impl<T> State for EigenState<T>
+impl<T> State<T> for EigenState<T>
     where T : EigenValue{
     fn rep(&self) -> usize{
         self.index.rep()
@@ -261,5 +295,9 @@ impl<T> State for EigenState<T>
 
     fn length(&self) -> usize{
         self.length
+    }
+
+    fn value(&self) -> T{
+        self.index.0
     }
 }

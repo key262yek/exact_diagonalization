@@ -1,15 +1,17 @@
 use crate::prelude::*;
-use super::{GeneralState, AddInfo};
+use super::GeneralState;
 
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct EigenNumber(usize);
 impl EigenValue for EigenNumber {}
-impl AddInfo<EigenNumMomentum> for EigenNumber{
-    fn add_info(&self, info : usize) -> EigenNumMomentum{
-        EigenNumMomentum::new(self.0, info)
-    }
-}
+
+// impl AddInfo<EigenNumMomentum> for EigenNumber{
+//     type Info = usize;
+//     fn add_info(&self, info : Self::Info) -> EigenNumMomentum{
+//         EigenNumMomentum::new(self.0, info)
+//     }
+// }
 
 impl EigenNumber{
     pub fn new(n : usize) -> Self{
