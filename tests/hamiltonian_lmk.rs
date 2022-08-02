@@ -12,6 +12,7 @@ fn hamiltonian_with(l : usize, m : usize, k : usize) -> Result<Array2<Complex64>
     let omega_k = basis[0].phase_factor();
 
     let n = basis.len();
+    let egn_v = basis[0].value();
     let mut hamiltonian : Array2<Complex64> = Array2::zeros((n, n));
 
     for (idx, state) in basis.iter().enumerate(){
@@ -23,7 +24,7 @@ fn hamiltonian_with(l : usize, m : usize, k : usize) -> Result<Array2<Complex64>
                 hamiltonian[[idx, idx]] += delta / 2f64;
 
                 let rep2 = bit_flip_unsafe(state.rep(), i, j);
-                if let Some((idx2, d)) = indices.get(&rep2){
+                if let Some((idx2, d)) = indices.get(&Representation(egn_v, rep2)){
                     let normal_f2 = basis[*idx2].normalize_factor();
                     hamiltonian[[*idx2, idx]] += -normal_f1 / normal_f2 * omega_k.powu(*d as u32);
                 }

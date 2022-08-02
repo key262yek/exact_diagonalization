@@ -42,6 +42,7 @@ impl Error{
             ErrorCode::InvalidBitIndex
             | ErrorCode::OverFlow
             | ErrorCode::InvalidConfiguration
+            | ErrorCode::InvalidArgument
              => Category::Syntax,
         }
     }
@@ -92,6 +93,9 @@ pub enum ErrorCode{
 
     // Invalid configuration, there could not be such system
     InvalidConfiguration,
+
+    //
+    InvalidArgument,
 }
 
 impl Display for ErrorCode{
@@ -102,6 +106,7 @@ impl Display for ErrorCode{
             ErrorCode::InvalidBitIndex => f.write_str("Invalid Bit index."),
             ErrorCode::OverFlow => f.write_str("State representation over flows."),
             ErrorCode::InvalidConfiguration => f.write_str("There could not be such system"),
+            ErrorCode::InvalidArgument => f.write_str("Invalid Argument input"),
         }
     }
 }

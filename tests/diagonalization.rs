@@ -10,12 +10,13 @@ fn nearest_hamiltonian_with(l : usize, m : usize, k : usize) -> Result<(Array1<f
     let omega_k = basis[0].phase_factor();
 
     let n = basis.len();
+    let eigen_v = basis[0].value();
     let mut hamiltonian : Array2<Complex64> = Array2::zeros((n, n));
 
     for (idx, state) in basis.iter().enumerate(){
         let normal_f1 = state.normalize_factor();
         for (rep2, value) in xxz.apply_to(state){
-            if let Some((idx2, d)) = indices.get(&rep2){
+            if let Some((idx2, d)) = indices.get(&Representation(eigen_v, rep2)){
                 let normal_f2 = basis[*idx2].normalize_factor();
                 hamiltonian[[*idx2, idx]] += Complex64::from(value) * normal_f1 / normal_f2 * omega_k.powu(*d as u32);
             }

@@ -18,7 +18,7 @@ fn test_number_conservation() -> Result<(), Error> {
 
     for n in 0..max_state {
         let state = SimpleState::new(n, total_ptl);
-        let m = state.total_number();
+        let m = state.bit_sum();
 
         let idx = magnet_sets[m].len();
         magnet_sets[m].push(state);
@@ -87,8 +87,8 @@ fn test_number_conservation2() -> Result<(), Error> {
                     hamiltonian[[idx, idx]] += delta / 2f64;
 
                     let rep2 = bit_flip(state.rep(), state.length, i, j)?;
-                    let idx2 = indices.get(&(*egn_n, rep2)).unwrap();
-                    hamiltonian[[*idx2, idx]] -= 1f64;
+                    let idx2 = indices.get(&Representation(*egn_n, rep2)).unwrap().0;
+                    hamiltonian[[idx2, idx]] -= 1f64;
                 }
             }
         }
@@ -126,6 +126,7 @@ fn test_number_conservation3() -> Result<(), Error> {
     let delta = 2f64;
     let t = 2f64 * delta;
 
+    let egn_v = EigenNumber(m);
     let n = binomial(total_ptl, m);
     let mut hamiltonian : Array2<f64> = Array2::zeros((n, n));
 
@@ -137,7 +138,7 @@ fn test_number_conservation3() -> Result<(), Error> {
                 hamiltonian[[idx, idx]] += delta / 2f64;
 
                 let rep2 = bit_flip(state.rep(), total_ptl, i, j)?;
-                if let Some(&idx2) = indices.get(&rep2){
+                if let Some(&idx2) = indices.get(&Representation(egn_v, rep2)){
                     hamiltonian[[idx2, idx]] -= 1f64;
                 }
             }

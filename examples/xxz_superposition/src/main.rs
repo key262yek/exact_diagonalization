@@ -136,6 +136,7 @@ fn main() -> (){
         _ => panic!(),
     };
     let (eval0, evec0) = &target_h0.eigh(UPLO::Lower).unwrap();
+    println!("Diagonalization end with time {:?}", total_start.elapsed());
 
     let min_energy_gap = eval0.iter().zip(eval0.iter().skip(1))
                             .map(|(x1, x2)| if (x2 - x1).abs() < 1e-9 {std::f64::MAX} else {x2 - x1})
@@ -176,7 +177,7 @@ fn main() -> (){
 
     let mut result : Array1<f64> = Array1::zeros(basis.len());
     for _ in 0..num_en{
-        let _start = Instant::now();
+        let start = Instant::now();
 
         let r = rng.sample(uni);
         let mut total : Array1<Complex64> = Array1::zeros(basis.len());
@@ -201,7 +202,7 @@ fn main() -> (){
         }
 
         result = result + total.map(|x| if x.re > rtol {p} else {0.0});
-        // println!("{:?}", start.elapsed());
+        println!("{:?}", start.elapsed());
     }
 
     write!(&mut writer,"energy\tenergy_gap\tprobability\tdegeneracy\n").unwrap();

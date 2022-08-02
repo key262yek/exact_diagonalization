@@ -15,10 +15,12 @@ pub use std::collections::HashMap;
 pub use crate::{
     error::{Error, ErrorCode},
     states::{
-        State, SimpleState, EigenValue, EmptyValue, Representation, RepWith, EigenState,
+        State, SimpleState, EigenState,
+        representation::{Representation, RepNum, RepNumMomentum},
+        symmetry::{EigenValue, HigherThan, LowerThan, EmptyValue, NumberConservation, EigenNumber, TranslationalSymmetry, EigenNumMomentum},
         bit_fns::{bit_flip},
-        number::{EigenNumber, NumberState},
-        momentum::{EigenNumMomentum, NumMomentumState},
+        number::NumberState,
+        momentum::NumMomentumState,
         iterator::{BitIterator, PairIterator, PeriodicPairIterator, PeriodicPairEnumerator, PeriodicDistancedPairIterator, PeriodicDistancedPairEnumerator, CycleIterator, CommenIterator},
     },
     bases::{
